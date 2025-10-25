@@ -5,43 +5,46 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar } from "lucide-react";
 import { Campaign } from "@/types";
 import { mockCampaigns } from "@/data/mockUsers";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const CampaignCrud = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [deletingCampaignId, setDeletingCampaignId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    budget: "",
-    startDate: "",
-    endDate: "",
-    targetAudience: "",
-    platform: [] as string[]
+    template_id: "",
+    start_date: "",
+    end_date: "",
+    target_count: "",
+    status: "draft"
   });
 
   const resetForm = () => {
     setFormData({
       name: "",
       description: "",
-      budget: "",
-      startDate: "",
-      endDate: "",
-      targetAudience: "",
-      platform: []
+      template_id: "",
+      start_date: "",
+      end_date: "",
+      target_count: "",
+      status: "draft"
     });
     setEditingCampaign(null);
   };
 
   const handleCreate = () => {
-    setIsDialogOpen(true);
+    setIsSheetOpen(true);
     resetForm();
   };
 
@@ -50,63 +53,67 @@ const CampaignCrud = () => {
     setFormData({
       name: campaign.name,
       description: campaign.description,
-      budget: campaign.budget.toString(),
-      startDate: campaign.startDate,
-      endDate: campaign.endDate,
-      targetAudience: campaign.targetAudience || "",
-      platform: campaign.platform || []
+      template_id: "1",
+      start_date: campaign.startDate,
+      end_date: campaign.endDate,
+      target_count: campaign.impressions.toString(),
+      status: campaign.status
     });
-    setIsDialogOpen(true);
+    setIsSheetOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
-    toast.success("Campanha excluída com sucesso!");
+  const handleDeleteClick = (id: string) => {
+    setDeletingCampaignId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deletingCampaignId) {
+      setCampaigns(campaigns.filter(c => c.id !== deletingCampaignId));
+      toast.success("Campanha excluída com sucesso!");
+      setIsDeleteDialogOpen(false);
+      setDeletingCampaignId(null);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (editingCampaign) {
-      // Update existing campaign
-      setCampaigns(campaigns.map(c => 
-        c.id === editingCampaign.id 
+      setCampaigns(campaigns.map(c =>
+        c.id === editingCampaign.id
           ? {
               ...c,
               name: formData.name,
               description: formData.description,
-              budget: parseFloat(formData.budget),
-              startDate: formData.startDate,
-              endDate: formData.endDate,
-              targetAudience: formData.targetAudience,
-              platform: formData.platform
+              startDate: formData.start_date,
+              endDate: formData.end_date,
+              status: formData.status as "active" | "completed" | "paused" | "draft",
+              impressions: parseInt(formData.target_count) || 0
             }
           : c
       ));
       toast.success("Campanha atualizada com sucesso!");
     } else {
-      // Create new campaign
       const newCampaign: Campaign = {
         id: `c${Date.now()}`,
         name: formData.name,
         description: formData.description,
-        status: "draft",
-        budget: parseFloat(formData.budget),
+        status: formData.status as "active" | "completed" | "paused" | "draft",
+        budget: 0,
         spent: 0,
         clicks: 0,
-        impressions: 0,
+        impressions: parseInt(formData.target_count) || 0,
         createdAt: new Date().toISOString().split('T')[0],
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        userId: "1", // Mock user ID
-        targetAudience: formData.targetAudience,
-        platform: formData.platform
+        startDate: formData.start_date,
+        endDate: formData.end_date,
+        userId: "1"
       };
       setCampaigns([...campaigns, newCampaign]);
       toast.success("Campanha criada com sucesso!");
     }
-    
-    setIsDialogOpen(false);
+
+    setIsSheetOpen(false);
     resetForm();
   };
 
@@ -130,99 +137,135 @@ const CampaignCrud = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">Gerenciar Campanhas</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetTrigger asChild>
             <Button onClick={handleCreate} className="button-primary">
               <Plus className="w-4 h-4 mr-2" />
               Nova Campanha
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingCampaign ? "Editar Campanha" : "Nova Campanha"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingCampaign ? "Edite os dados da campanha" : "Crie uma nova campanha de marketing"}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+          </SheetTrigger>
+          <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>
+                {editingCampaign ? "EE2: Alterar Campanha" : "EE1: Incluir Campanha"}
+              </SheetTitle>
+              <SheetDescription>
+                {editingCampaign ? "Altere os dados da campanha de phishing" : "Crie uma nova campanha de phishing simulado"}
+              </SheetDescription>
+            </SheetHeader>
+            <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome da Campanha</Label>
+                  <Label htmlFor="name">Nome da Campanha *</Label>
                   <Input
                     id="name"
+                    placeholder="Ex: Campanha Segurança 2024"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="budget">Budget (R$)</Label>
+                  <Label htmlFor="description">Descrição *</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva o objetivo desta campanha..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={4}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="template_id">Template *</Label>
+                  <Select value={formData.template_id} onValueChange={(value) => setFormData({ ...formData, template_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Banco Seguro - Verificação de Conta</SelectItem>
+                      <SelectItem value="2">IT Support - Reset de Senha</SelectItem>
+                      <SelectItem value="3">LinkedIn - Convite de Conexão</SelectItem>
+                      <SelectItem value="4">Suporte Técnico Urgente</SelectItem>
+                      <SelectItem value="5">RH - Atualização de Benefícios</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="start_date">Data de Início *</Label>
+                    <div className="relative">
+                      <Input
+                        id="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                        required
+                      />
+                      <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="end_date">Data de Término *</Label>
+                    <div className="relative">
+                      <Input
+                        id="end_date"
+                        type="date"
+                        value={formData.end_date}
+                        onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                        required
+                      />
+                      <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="target_count">Número de Alvos *</Label>
                   <Input
-                    id="budget"
+                    id="target_count"
                     type="number"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    placeholder="Ex: 150"
+                    value={formData.target_count}
+                    onChange={(e) => setFormData({ ...formData, target_count: e.target.value })}
+                    min="1"
                     required
                   />
+                  <p className="text-sm text-muted-foreground">
+                    Quantidade de usuários que receberão o phishing simulado
+                  </p>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                />
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">Data de Início</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">Data de Fim</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    required
-                  />
+                  <Label htmlFor="status">Status *</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Rascunho</SelectItem>
+                      <SelectItem value="active">Ativa</SelectItem>
+                      <SelectItem value="paused">Pausada</SelectItem>
+                      <SelectItem value="completed">Concluída</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="targetAudience">Público-Alvo</Label>
-                <Input
-                  id="targetAudience"
-                  value={formData.targetAudience}
-                  onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-                  placeholder="Ex: Empresários de 25-45 anos"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" className="button-primary">
-                  {editingCampaign ? "Atualizar" : "Criar"} Campanha
+              <div className="flex gap-3 pt-4 border-t">
+                <Button type="submit" className="flex-1">
+                  {editingCampaign ? "Atualizar Campanha" : "Criar Campanha"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsSheetOpen(false)}>
                   Cancelar
                 </Button>
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <Card className="card-hover glass-effect">
@@ -275,10 +318,10 @@ const CampaignCrud = () => {
                       <Button size="sm" variant="outline" onClick={() => handleEdit(campaign)}>
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={() => handleDelete(campaign.id)}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteClick(campaign.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -290,6 +333,24 @@ const CampaignCrud = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>EE3: Excluir Campanha</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta campanha? Esta ação não pode ser desfeita.
+              Todos os dados relacionados à campanha serão permanentemente removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir Campanha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
