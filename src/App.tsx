@@ -11,6 +11,12 @@ import Templates from "./pages/Templates";
 import Analytics from "./pages/Analytics";
 import UsersPage from "./pages/Users";
 import UserProfiles from "./pages/UserProfiles";
+import Organizations from "./pages/Organizations";
+import Departments from "./pages/Departments";
+import TrainingModules from "./pages/TrainingModules";
+import SecurityPolicies from "./pages/SecurityPolicies";
+import UserGroups from "./pages/UserGroups";
+import EmailLogs from "./pages/EmailLogs";
 import History from "./pages/History";
 import Library from "./pages/Library";
 import Profile from "./pages/Profile";
@@ -37,6 +43,12 @@ const App = () => (
           <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
           <Route path="/users" element={<Layout><UsersPage /></Layout>} />
           <Route path="/user-profiles" element={<Layout><UserProfiles /></Layout>} />
+          <Route path="/organizations" element={<Layout><Organizations /></Layout>} />
+          <Route path="/departments" element={<Layout><Departments /></Layout>} />
+          <Route path="/training-modules" element={<Layout><TrainingModules /></Layout>} />
+          <Route path="/security-policies" element={<Layout><SecurityPolicies /></Layout>} />
+          <Route path="/user-groups" element={<Layout><UserGroups /></Layout>} />
+          <Route path="/email-logs" element={<Layout><EmailLogs /></Layout>} />
           <Route path="/history" element={<Layout><History /></Layout>} />
           <Route path="/library" element={<Layout><Library /></Layout>} />
           <Route path="/profile" element={<Layout><Profile /></Layout>} />

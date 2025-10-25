@@ -1,18 +1,23 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  BarChart3, 
-  Mail, 
-  Settings, 
-  Users, 
-  FileText, 
-  History, 
+import {
+  BarChart3,
+  Mail,
+  Settings,
+  Users,
+  FileText,
+  History,
   BookOpen,
   Shield,
   Plus,
   Home,
-  Fish,
-  CreditCard
+  CreditCard,
+  Building2,
+  Building,
+  GraduationCap,
+  ShieldCheck,
+  UsersRound,
+  MailCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ocellarisLogo from "@/assets/ocellaris-logo.png";
@@ -32,6 +37,12 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/analytics", icon: BarChart3, label: "Relatórios" },
     { path: "/users", icon: Users, label: "Usuários" },
     { path: "/user-profiles", icon: Users, label: "Perfis de Usuários" },
+    { path: "/organizations", icon: Building2, label: "Organizações" },
+    { path: "/departments", icon: Building, label: "Departamentos" },
+    { path: "/training-modules", icon: GraduationCap, label: "Treinamentos" },
+    { path: "/security-policies", icon: ShieldCheck, label: "Políticas" },
+    { path: "/user-groups", icon: UsersRound, label: "Grupos" },
+    { path: "/email-logs", icon: MailCheck, label: "Logs de Email" },
     { path: "/pricing", icon: CreditCard, label: "Planos" },
     { path: "/history", icon: History, label: "Histórico" },
     { path: "/library", icon: BookOpen, label: "Biblioteca" },
